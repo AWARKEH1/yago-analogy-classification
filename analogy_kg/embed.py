@@ -43,7 +43,8 @@ class Embedder:
                                    truncation=True, max_length=64,
                                    return_tensors="pt").to(self.device)
             with torch.no_grad():
-                hidden = self.model(**batch).last_hidden_state
+                hidden = self.model(input_ids=batch["input_ids"],
+                                    attention_mask=batch["attention_mask"]).last_hidden_state
             mask = batch["attention_mask"].unsqueeze(-1).float()
             pooled = (hidden * mask).sum(1) / mask.sum(1).clamp(min=1e-9)
             out.append(pooled.cpu().numpy().astype(np.float32))
