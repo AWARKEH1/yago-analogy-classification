@@ -1,4 +1,4 @@
-"""Compute one sentence embedding per entity with gte-large-en-v1.5.
+"""Compute one sentence embedding per entity with bge-large-en-v1.5.
 
 The original project embedded every entity of every analogy row and stored the
 4 x 1024 floats as text inside a CSV. Here each *unique* entity is embedded once
@@ -19,7 +19,11 @@ import pandas as pd
 
 from .data import entity_to_text
 
-MODEL_NAME = "Alibaba-NLP/gte-large-en-v1.5"
+# The original project used Alibaba-NLP/gte-large-en-v1.5, whose custom
+# (trust_remote_code) implementation crashes with recent versions of
+# transformers. BAAI/bge-large-en-v1.5 is a standard BERT model with the same
+# embedding size (1024), so the ANNc architecture is unchanged.
+MODEL_NAME = "BAAI/bge-large-en-v1.5"
 
 
 class Embedder:
@@ -31,8 +35,8 @@ class Embedder:
 
         self.torch = torch
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-        self.model = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModel.from_pretrained(model_name)
         self.model.to(self.device).eval()
 
     def encode(self, texts: list[str], batch_size: int = 256) -> np.ndarray:
